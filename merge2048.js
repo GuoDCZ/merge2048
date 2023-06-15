@@ -15,6 +15,7 @@ G.F.loadMain = function () {
         "#D4BAAD", "#B0B1B6", "#849B91", "#D89C7A" 
     ]
 
+    G.interval = 10;
     G.setState({ballId: arr})
     G.makeGob('viewport', G)
         .setVar({x: 0, y: 0, w: w, h: h })
@@ -31,7 +32,7 @@ G.F.loadMain = function () {
                 r: r, m: m,
                 w: 2*r, h: 2*r, 
                 tx: -r, ty: -r,
-                vx: Math.random()*10-5, vy: Math.random()*10-5, 
+                vx: Math.random()*4-2, vy: Math.random()*4-2, 
                 //vx: 0, vy: -2*i,
                 setNextXY: function () {
                     var t = this;
