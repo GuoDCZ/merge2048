@@ -15,7 +15,7 @@ G.F.loadMain = function () {
         "#D4BAAD", "#B0B1B6", "#849B91", "#D89C7A" 
     ]
 
-    G.interval = 10;
+    G.interval = 5;
     G.setState({ballId: arr})
     G.makeGob('viewport', G)
         .setVar({x: 0, y: 0, w: w, h: h })
@@ -32,7 +32,8 @@ G.F.loadMain = function () {
                 r: r, m: m,
                 w: 2*r, h: 2*r, 
                 tx: -r, ty: -r,
-                vx: Math.random()*4-2, vy: Math.random()*4-2, 
+                vx: (Math.random()*4-2)*G.interval/10,
+                vy: (Math.random()*4-2)*G.interval/10, 
                 //vx: 0, vy: -2*i,
                 setNextXY: function () {
                     var t = this;
@@ -41,13 +42,20 @@ G.F.loadMain = function () {
                         ny: t.y + t.vy
                     });
                 },
+                updateXY: function () {
+                    var t = this;
+                    t.setVar({
+                        x: t.nx, 
+                        y: t.ny
+                    });
+                },
             })
             .addClass('ball')
             .setStyle({ backgroundColor: colors[s-1]})
             .turnOn();
     });
     G.S.ballId.forEach(id => G.O[id].setNextXY());
-    G.S.ballId.forEach(id => G.O[id].incrementXY());
+    G.S.ballId.forEach(id => G.O[id].updateXY());
 }; 
 
 G.F.checkWallIntersection = function (t, wall) {
@@ -74,7 +82,14 @@ G.F.fixVelocityByWallCollision = function (t, wall) {
     switch (wall) {
         case "x-": case "x+": t.setVar({vx: -t.vx}); break;
         case "y-": case "y+": t.setVar({vy: -t.vy}); break;
-    }
+    };
+    //return
+    switch (wall) {
+        case "x-": t.setVar({x: 2*t.r - t.x}); break;
+        case "x+": t.setVar({x: 2*(t.P.w - t.r) - t.x}); break;
+        case "y-": t.setVar({y: 2*t.r - t.y}); break;
+        case "y+": t.setVar({y: 2*(t.P.h - t.r) - t.y}); break;
+    };
 };
 
 G.F.fixPositionByWallCollision = function (t, wall) {
@@ -88,12 +103,14 @@ G.F.fixPositionByWallCollision = function (t, wall) {
 
 G.F.testWallCollision = function (t, wall) {
     if (G.F.checkWallIntersection(t, wall)) {
-        if (G.F.checkWallApproaching(t, wall))
+        if (G.F.checkWallApproaching(t, wall)) {
             G.F.fixVelocityByWallCollision(t, wall);
-        else
+        }
+        else {
+            console.log("FF");
             G.F.fixPositionByWallCollision(t, wall);
+        }
         t.setNextXY();
-        t.addClass("highlight");
         return true;
     }
     return false;
@@ -174,7 +191,7 @@ G.F.mainAI = function () {
     G.S.ballId.forEach(id => G.O[id].removeClass("highlight"));
     G.S.ballId.forEach(id => G.O[id].setNextXY());
     G.F.testCollision();
-    G.S.ballId.forEach(id => G.O[id].incrementXY());
+    G.S.ballId.forEach(id => G.O[id].updateXY());
     G.S.ballId.forEach(id => G.O[id].draw());
 };
 
@@ -188,6 +205,7 @@ G.F.testCollision = function (maxLoop = 1000) {
             var a = G.O[id];
             ["x-","x+","y-","y+"].forEach(wall => {
                 if (G.F.testWallCollision(a, wall)) processing = true; 
+                a.setNextXY();
             });
             var pass = true;
             G.S.ballId.forEach(id_another => {
@@ -198,6 +216,7 @@ G.F.testCollision = function (maxLoop = 1000) {
                 var b = G.O[id_another];
                 if (G.F.testBallCollision(a, b)) processing = true;
             })
+            
         });
     }
     if (nLoop == maxLoop) console.log("F!");
